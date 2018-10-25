@@ -5,15 +5,17 @@ import japgolly.scalajs.react._
 import japgolly.scalajs.react.extra.router.RouterCtl
 import japgolly.scalajs.react.vdom.html_<^._
 import org.scalajs.dom
-import services.StreamUtils
+import services.{MegaContent, RootModel, StreamUtils}
 
 import scala.util.Random
 import scala.language.existentials
-import shared.{Keys, User}
+import shared.Keys
+import client.User
+import diode.react.ModelProxy
 
 object ActivityStream {
 
-  case class Props(router: RouterCtl[Loc],user: User)
+  case class Props(router: RouterCtl[Loc], proxy: ModelProxy[MegaContent], user: User)
   case class State(users: Map[String, User])
 
 
@@ -29,7 +31,7 @@ object ActivityStream {
         Section(
           <.div(^.className := "small-12 columns",
             ChirpForm(),
-            ChirpStream(props.router, StreamUtils.createActivityStream(userId), s.users)
+            ChirpStream(props.router,  props.proxy, StreamUtils.createActivityStream(userId), s.users)
           )
         )
       )
@@ -42,5 +44,5 @@ object ActivityStream {
     .componentDidMount(scope => scope.backend.mounted(scope.props))
     .build
 
-  def apply(router: RouterCtl[Loc],user: User) = component(Props(router, user))
+  def apply(router: RouterCtl[Loc], proxy: ModelProxy[MegaContent],user: User) = component(Props(router,proxy, user))
 }

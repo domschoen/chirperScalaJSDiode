@@ -15,7 +15,7 @@ object UserUtils {
 
 
 
-  def getUser(userId: String) : Future[Option[User]] = {
+  def getUser(userId: String) : Future[Option[UserFromServer]] = {
     Ajax.get("/api/users/" + userId).recover {
       // Recover from a failed error code into a successful future
       case dom.ext.AjaxException(req) => req
@@ -23,7 +23,7 @@ object UserUtils {
       r.status match {
         case 200 =>
           val user = read[UserFromServer](r.responseText)
-          Some(User())
+          Some(user)
         case _ =>
           None
       }

@@ -3,26 +3,29 @@ package components
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.extra.router.RouterCtl
 import japgolly.scalajs.react.vdom.html_<^._
-import shared.User
 
 import scala.language.existentials
 import scala.scalajs.js.JSON
 import client.Main.Loc
 import client.Main.LoginLoc
+import client.UserFromServer
+import diode.react.ModelProxy
 import org.scalajs.dom
+import services.MegaContent
 //import components.{ContentLayout, PageLayout}
 import dom.ext.Ajax
 import upickle.default._
-import shared.User
+import client.User
 import upickle.default.{macroRW, ReadWriter => RW}
 import scala.concurrent.ExecutionContext.Implicits.global
 import shared.Keys
+import client.UserFromServer
 
 object SignUpPage {
 
 
 
-  case class Props(ctl: RouterCtl[Loc])
+  case class Props(ctl: RouterCtl[Loc], proxy: ModelProxy[MegaContent])
   case class State(userId: Option[String], name: Option[String], error: Option[String])
 
 
@@ -37,7 +40,7 @@ object SignUpPage {
               case Some(name) =>
                 val trimName: String =  name.trim()
                 if (trimID.length > 0) {
-                  val user = User(id,name,List())
+                  val user = UserFromServer(id,name,List())
                   val request = Ajax.post(
                     url = "/api/users",
                     data = write(user)
@@ -80,7 +83,7 @@ object SignUpPage {
       val nameString = if (s.name.isDefined) s.name.get else ""
       val errorMsg = if (s.error.isDefined) s.error.get else ""
 
-      PageLayout(props.ctl, None, true, e => Callback.empty,
+      PageLayout(props.ctl,props.proxy,
         ContentLayout("Sign up",
           Section(
             <.div(^.className := "small-12 large-4 columns",
@@ -106,5 +109,5 @@ object SignUpPage {
     .renderBackend[Backend]
     .build
 
-  def apply(ctl: RouterCtl[Loc]) = component(Props(ctl))
+  def apply(ctl: RouterCtl[Loc],proxy: ModelProxy[MegaContent]) = component(Props(ctl,proxy))
 }

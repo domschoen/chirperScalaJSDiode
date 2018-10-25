@@ -6,17 +6,26 @@ import diode.util._
 import diode.react.ReactConnector
 
 import scala.scalajs.concurrent.JSExecutionContext.Implicits.queue
-import client.User
+import client.{ChirpFromServer, User, UserFromServer}
 import org.scalajs.dom
 import shared.Keys
 
 // Actions
 case class CheckUser(userIDFromStorage: Option[String]) extends Action
-case class RegisterUser(user: Option[User]) extends Action
+case class RegisterUser(user: UserFromServer) extends Action
+case class LoginWithID(userId: String) extends Action
+case class LoggedUserAgainstDB(userId: String, user: Option[UserFromServer]) extends Action
+case class LocalStorageUserAgainstDB(user: Option[UserFromServer]) extends Action
+case class RegisterFriends(friendIDs: List[String]) extends Action
+case class ChirpReceived(chirp: ChirpFromServer) extends Action
+
+
+case object Logout extends Action
 
 // The base model of our application
-case class UserLogin(loginChecked: Boolean = false, loggedUser: Option[User])
-case class RootModel(userLogin: UserLogin, friends: List[User])
+case class UserLogin(loginChecked: Boolean = false, loggedUser: Option[User], loginError: Option[String] = None)
+case class MegaContent(userLogin: UserLogin, friends: List[User])
+case class RootModel(content: MegaContent)
 
 
 /**
@@ -29,29 +38,65 @@ class UserLoginHandler[M](modelRW: ModelRW[M, UserLogin]) extends ActionHandler(
     case CheckUser(userIDFromStorage) =>
       userIDFromStorage match {
         case Some(userId) =>
-          effectOnly(Effect(UserUtils.getUser(userId).map(RegisterUser(_))))
+          effectOnly(Effect(UserUtils.getUser(userId).map(LocalStorageUserAgainstDB(_))))
         case None =>
-          effectOnly(Effect.action(RegisterUser(None)))
+          effectOnly(Effect.action(LocalStorageUserAgainstDB(None)))
       }
 
-    case RegisterUser(userOpt) =>
+
+    case LocalStorageUserAgainstDB(userOpt) =>
       userOpt match {
         case Some(user) =>
-          updated(UserLogin(loginChecked = true, loggedUser = Some(user)))
+          effectOnly(Effect.action(RegisterUser(user)))
+
         case None =>
           dom.window.localStorage.removeItem(Keys.userIdKey)
           updated(UserLogin(loginChecked = true, loggedUser = None))
       }
+
+
+    // Could be:
+    // - a user retrieved from id in localStorage
+    // - a user logged
+    case RegisterUser(user) =>
+       val u = User(user.userId,user.name,List())
+       val newValue = value.copy(loginChecked = true, loggedUser = Some(u))
+       val friends = user.friends
+       updated(newValue, Effect.action(RegisterFriends(friends)))
+
+
+    case LoggedUserAgainstDB(userId, userOpt) =>
+      userOpt match {
+        case Some(user) =>
+          dom.window.localStorage.setItem(Keys.userIdKey, user.userId)
+          effectOnly(Effect.action(RegisterUser(user)))
+
+        case None =>
+          val errorMsg = "User " + userId + " does not exist."
+          println("User not found " + errorMsg)
+          val newValue = value.copy(loginError = Some(errorMsg))
+          updated(newValue)
+      }
+
+    case LoginWithID(userId) =>
+      effectOnly(Effect(UserUtils.getUser(userId).map(LoggedUserAgainstDB(userId, _))))
+
   }
 }
-
+class FriendsHandler[M](modelRW: ModelRW[M, List[User]]) extends ActionHandler(modelRW) {
+  override def handle = {
+    case RegisterFriends(friendIDs) =>
+      noChange
+  }
+}
 
 // Application circuit
 object SPACircuit extends Circuit[RootModel] with ReactConnector[RootModel] {
   // initial application model
-  override protected def initialModel = RootModel(UserLogin(false,None), List())
+  override protected def initialModel = RootModel(MegaContent(UserLogin(false,None), List()))
   // combine all handlers into one
   override protected val actionHandler = composeHandlers(
-    new UserLoginHandler(zoomTo(_.userLogin))
+    new UserLoginHandler(zoomTo(_.content.userLogin)),
+    new FriendsHandler(zoomTo(_.content.friends))
   )
 }

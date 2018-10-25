@@ -6,24 +6,24 @@ import japgolly.scalajs.react.extra._
 import org.scalajs.dom
 import org.scalajs.dom.ext.Ajax
 import services.StreamUtils.Socket
-import services.{StreamUtils, UserUtils}
-import shared.{Keys, PostedMessage, User}
+import services.{MegaContent, RootModel, StreamUtils, UserUtils}
+import shared.{Keys, PostedMessage}
 import upickle.default._
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.extra.router.RouterCtl
 import japgolly.scalajs.react.vdom.html_<^._
-import shared.User
+import client.User
 
 import scala.language.existentials
 import scala.scalajs.js.JSON
 import client.Main.Loc
 import client.Main.LoginLoc
+import diode.react.ModelProxy
 import japgolly.scalajs.react.extra.Reusability
 import org.scalajs.dom
 //import components.{ContentLayout, PageLayout}
 import dom.ext.Ajax
 import upickle.default._
-import shared.User
 import upickle.default.{macroRW, ReadWriter => RW}
 import scala.concurrent.ExecutionContext.Implicits.global
 import shared.Keys
@@ -32,8 +32,8 @@ import scala.concurrent.ExecutionContext.Implicits.global
 
 object ChirpStream{
 
-  case class Props(router: RouterCtl[Loc], stream: Socket, users: Map[String, User])
-  case class State(message: Option[String], users: Map[String, User], chirps: List[shared.Chirp])
+  case class Props(router: RouterCtl[Loc], proxy: ModelProxy[MegaContent], stream: Socket, users: Map[String, User])
+  case class State(message: Option[String], users: Map[String, User], chirps: List[client.Chirp])
   //val stateReuse: Reusability[State] = Reusability.byRefOr_==
   //val propsReuse: Reusability[Props] = Reusability.byRefOr_==
 
@@ -42,7 +42,7 @@ object ChirpStream{
     var loadingUsers = Map[String, Boolean]()
     //var stream: Socket = null
 
-    def addChirp (chirp: shared.Chirp) = {
+    def addChirp (chirp: client.Chirp) = {
       println("Add chirp " + chirp)
       $.modState(s => s.copy(chirps = chirp :: s.chirps)).runNow()
       Callback.empty
@@ -105,16 +105,6 @@ object ChirpStream{
       $.modState(_.copy(message = newMessage))
     }
 
-    def loadUser(userId: String, s: State) = {
-      if (!loadingUsers.contains(userId)) {
-        loadingUsers + (userId -> true)
-        val request = UserUtils.getUser(userId, { user => {
-          val newUsers = s.users + (userId -> user);
-          $.modState(_.copy(users = newUsers))
-        }}, Callback.empty)
-        Callback.future(request)
-      }
-    }
 
     def render(props: Props, s: State): VdomElement = {
       //props.users
@@ -123,12 +113,7 @@ object ChirpStream{
         <.hr(),
         s.chirps toTagMod (
           chirp => {
-            val userName = if(s.users.contains(chirp.userId)) {
-              s.users(chirp.userId).name
-            } else {
-              loadUser(chirp.userId, s)
-              chirp.userId
-            }
+            val userName = s.users(chirp.userId).name
             Chirp(props.router, chirp.userId, userName, chirp.uuid, chirp.message)
           }
         )
@@ -150,5 +135,5 @@ object ChirpStream{
     .componentWillReceiveProps(scope => scope.backend.willReceiveProps(scope.currentProps, scope.nextProps))
     .build
 
-  def apply(router: RouterCtl[Loc],stream: Socket, users: Map[String, User]) = component(Props(router, stream, users))
+  def apply(router: RouterCtl[Loc], proxy: ModelProxy[MegaContent],stream: Socket, users: Map[String, User]) = component(Props(router, proxy, stream, users))
 }

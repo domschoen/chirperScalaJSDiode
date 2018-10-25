@@ -4,10 +4,10 @@ import japgolly.scalajs.react.{Callback, CallbackTo}
 import org.scalajs.dom
 import org.scalajs.dom.raw.MessageEvent
 import org.scalajs.dom.{CloseEvent, Event, MessageEvent, WebSocket}
-import shared.{Chirp, StreamForUsers}
+import shared.StreamForUsers
 import upickle.default.write
 import upickle.default._
-import shared.User
+import client.{Chirp, ChirpFromServer, User}
 import upickle.default.{macroRW, ReadWriter => RW}
 
 object StreamUtils {
@@ -21,7 +21,7 @@ object StreamUtils {
       socket.close()
     }
 
-    def connect(onChirp: shared.Chirp => Callback) {
+    def connect(onChirp: Chirp => Callback) {
       socket.onopen = (e: Event) => {
         userId match {
           case Some(uid) =>
@@ -38,9 +38,9 @@ object StreamUtils {
         dom.console.log(s"Socket error! ${e}")
       }
       socket.onmessage = (e: MessageEvent) => {
-        val chirp = read[Chirp](e.data.toString);
+        val chirp = read[ChirpFromServer](e.data.toString);
         println("Socket received chirp " + chirp)
-        onChirp(chirp);
+        SPACircuit.dispatch(ChirpReceived(chirp))
       }
     }
   }

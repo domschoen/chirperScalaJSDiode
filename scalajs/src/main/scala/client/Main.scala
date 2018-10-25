@@ -9,6 +9,8 @@ import scala.scalajs.js
 import scala.scalajs.js.annotation.{JSExport, JSExportTopLevel}
 import components.{AddFriendPage, AppPage, SignUpPage}
 import com.zoepepper.facades.jsjoda._
+import services.SPACircuit
+import diode.react.ModelProxy
 
 @JSExportTopLevel("Main")
 object Main extends js.JSApp {
@@ -23,16 +25,16 @@ object Main extends js.JSApp {
   // configure the router
   val routerConfig = RouterConfigDsl[Loc].buildConfig { dsl =>
     import dsl._
+    val wrapper = SPACircuit.connect(_.content)
 
     (emptyRule
-      | staticRoute(root, LoginLoc) ~> renderR(ctl => AppPage(ctl, None, false))
-      | staticRoute("#signup", SignupLoc) ~> renderR(ctl => SignUpPage(ctl))
-      | staticRoute("#signup", SignupLoc) ~> renderR(ctl => SignUpPage(ctl))
-      | staticRoute("#addFriend", AddFriendLoc) ~> renderR(ctl => AppPage(ctl, None, true))
+      | staticRoute(root, LoginLoc) ~> renderR(ctl => SPACircuit.wrap(_.content)(proxy => AppPage(ctl, proxy, None, false)))
+      | staticRoute("#signup", SignupLoc) ~> renderR(ctl => SPACircuit.wrap(_.content)(proxy => SignUpPage(ctl,proxy)))
+      | staticRoute("#addFriend", AddFriendLoc) ~> renderR(ctl => SPACircuit.wrap(_.content)(proxy => AppPage(ctl, proxy, None, true)))
       | dynamicRouteCT("#users" / string(".*").caseClass[UserChirpLoc]) ~> dynRenderR(
-      (m, ctl) => {
-        AppPage(ctl, Some(m.userId), false)
-      })
+        (m, ctl) => {
+          wrapper(p => AppPage(ctl, p, Some(m.userId), false))
+        })
     ).notFound(redirectToPage(LoginLoc)(Redirect.Replace))
 
   }

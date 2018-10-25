@@ -26,7 +26,7 @@ object Settings {
   object versions {
     val scala = "2.11.11"
     val scalaDom = "0.9.5"
-    val scalajsReact = "1.3.1"
+    val scalajsReact = "1.1.0"
     val scalaCSS = "0.5.3"
     val log4js = "1.4.10"
     val autowire = "0.2.6"
@@ -40,7 +40,6 @@ object Settings {
     //val bootstrap = "3.3.7" : doesn't compile less files not found
     val bootstrap = "3.3.6"
     val chartjs = "2.1.3"
-    val momentjs = "0.9.0"
 
     val scalajsScripts = "1.0.0"
   }
@@ -87,6 +86,5 @@ object Settings {
     "org.webjars" % "chartjs" % versions.chartjs / "Chart.js" minified "Chart.min.js",
     "org.webjars" % "log4javascript" % versions.log4js / "js/log4javascript_uncompressed.js" minified "js/log4javascript.js",
     "org.webjars.npm" % "js-joda" % "1.1.8" / "dist/js-joda.js" minified "dist/js-joda.min.js"
-    //"org.webjars" % "momentjs" % "2.19.1" / "moment.js"
   ))
 }

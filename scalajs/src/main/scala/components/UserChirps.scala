@@ -5,13 +5,16 @@ import japgolly.scalajs.react._
 import japgolly.scalajs.react.extra.router.RouterCtl
 import japgolly.scalajs.react.vdom.html_<^._
 import org.scalajs.dom
-import services.{StreamUtils, UserUtils}
-import shared.{Keys, User}
+import services.{MegaContent, StreamUtils, UserUtils}
+import shared.Keys
+import client.User
+import diode.react.ModelProxy
+
 import scala.concurrent.ExecutionContext.Implicits.global
 
 object UserChirps {
 
-  case class Props(router: RouterCtl[Loc],userId: String)
+  case class Props(router: RouterCtl[Loc], proxy: ModelProxy[MegaContent],userId: String)
 
   // TODO :  notFound shoud be added because at the beginning is shouldn't be not found even if user is not existing
   case class State(user: Option[User], notFound : Boolean)
@@ -21,12 +24,14 @@ object UserChirps {
     def mounted(p: Props): japgolly.scalajs.react.Callback = {
       println("UserChirps mounted")
 
-      val request = UserUtils.getUser(p.userId, { user => {
+      // TODO restore it
+      /*val request = UserUtils.getUser(p.userId, { user => {
         $.modState(_.copy(user = Some(user)))
       }},
         $.modState(_.copy(user = None, notFound = true))
       )
-      Callback.future(request)
+      Callback.future(request)*/
+      Callback.empty
     }
 
     def render(props: Props, s: State): VdomElement = {
@@ -55,7 +60,7 @@ object UserChirps {
               Section(
                 <.div(^.className := "small-12 columns",
                   ChirpForm().when(showChirpForm),
-                  ChirpStream(props.router, StreamUtils.createActivityStream(userId), users)
+                  ChirpStream(props.router, props.proxy, StreamUtils.createActivityStream(userId), users)
                 )
               )
             )
@@ -72,5 +77,5 @@ object UserChirps {
     .componentDidMount(scope => scope.backend.mounted(scope.props))
     .build
 
-  def apply(router: RouterCtl[Loc],userId: String) = component(Props(router, userId))
+  def apply(router: RouterCtl[Loc], proxy: ModelProxy[MegaContent],userId: String) = component(Props(router, proxy, userId))
 }

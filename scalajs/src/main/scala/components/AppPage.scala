@@ -8,7 +8,7 @@ import japgolly.scalajs.react.vdom.html_<^._
 import scala.util.Random
 import scala.language.existentials
 import org.scalajs.dom
-import services.{AjaxClient, CheckUser, RootModel}
+import services._
 import dom.ext._
 import org.scalajs.dom.Event
 
@@ -34,7 +34,7 @@ import diode.react.ModelProxy
 // Translation of App
 object AppPage {
 
-  case class Props(ctl: RouterCtl[Loc], proxy: ModelProxy[RootModel], userId: Option[String], showAddFriends: Boolean)
+  case class Props(ctl: RouterCtl[Loc], proxy: ModelProxy[MegaContent], userId: Option[String], showAddFriends: Boolean)
 
 
   protected class Backend($: BackendScope[Props, Unit]) {
@@ -48,16 +48,7 @@ object AppPage {
       p.proxy.dispatchCB(CheckUser(userIdOpt))
     }
 
-    def handleLogin(user: User): Callback = {
-      $.modState({sta:State => sta.copy(user = Some(user))})
-    }
 
-    def logout(e: ReactEventFromInput): Callback = {
-      e.preventDefaultCB >> {
-        dom.window.localStorage.removeItem(Keys.userIdKey)
-        $.modState({sta:State => sta.copy(user = None)})
-      }
-    }
 
 
     def render(props: Props): VdomElement = {
@@ -73,19 +64,20 @@ object AppPage {
             } else {
               props.userId match {
                 case Some(uid) =>
-                  UserChirps(props.ctl, uid)
+                  UserChirps(props.ctl,props.proxy, uid)
                 case None =>
-                  ActivityStream(props.ctl, user)
+                  ActivityStream(props.ctl, props.proxy, user)
               }
             }
-            PageLayout(props.ctl, Some(user), false, logout,
+            // user is logged
+            PageLayout(props.ctl, props.proxy,
               subComponent
             )
           }
           case None =>  {
-            PageLayout(props.ctl, None, true, e => Callback.empty,
+            PageLayout(props.ctl, props.proxy,
               ContentLayout("Login",
-                LoginForm(handleLogin)
+                LoginForm(props.proxy)
               )
             )
           }
@@ -97,13 +89,12 @@ object AppPage {
   }
   // create the React component for Dashboard
   private val component = ScalaComponent.builder[Props]("AppPage")
-    .initialState(State(false, None))
     .renderBackend[Backend]
     .componentDidMount(scope => scope.backend.mounted(scope.props))
     .build
 
-  def apply(ctl: RouterCtl[Loc], proxy: ModelProxy[RootModel], userId: Option[String], showAddFriends: Boolean) = {
+  def apply(ctl: RouterCtl[Loc], proxy: ModelProxy[MegaContent], userId: Option[String], showAddFriends: Boolean) = {
     println("create Login Page")
-    component(Props(ctl, userId, showAddFriends))
+    component(Props(ctl, proxy, userId, showAddFriends))
   }
 }
