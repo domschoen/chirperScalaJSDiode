@@ -7,9 +7,8 @@ import org.scalajs.dom
 
 import scala.scalajs.js
 import scala.scalajs.js.annotation.{JSExport, JSExportTopLevel}
-import shared.User
 import components.{AddFriendPage, AppPage, SignUpPage}
-
+import com.zoepepper.facades.jsjoda._
 
 @JSExportTopLevel("Main")
 object Main extends js.JSApp {
@@ -64,6 +63,9 @@ object Main extends js.JSApp {
   @JSExport
   def main(): Unit = {
     println("Welcome to your Play application's JavaScript!");
+    val someInstant = Instant.ofEpochMilli(1540222606472d)
+    val someDate = LocalDateTime.ofInstant(someInstant, ZoneId.of("GMT+2"));
+    println("someInstant" + someDate.toString)
 
     val router = Router(BaseUrl.until_#, routerConfig)
 

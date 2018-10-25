@@ -40,6 +40,7 @@ object Settings {
     //val bootstrap = "3.3.7" : doesn't compile less files not found
     val bootstrap = "3.3.6"
     val chartjs = "2.1.3"
+    val momentjs = "0.9.0"
 
     val scalajsScripts = "1.0.0"
   }
@@ -71,6 +72,7 @@ object Settings {
     "io.suzaku" %%% "diode" % versions.diode,
     "io.suzaku" %%% "diode-react" % versions.diode,
     "org.scala-js" %%% "scalajs-dom" % versions.scalaDom,
+    "com.zoepepper" %%% "scalajs-jsjoda" % "1.1.1",
     "com.lihaoyi" %%% "utest" % versions.uTest % Test
   ))
 
@@ -83,6 +85,8 @@ object Settings {
     "org.webjars" % "jquery" % versions.jQuery / "jquery.js" minified "jquery.min.js",
     "org.webjars" % "bootstrap" % versions.bootstrap / "bootstrap.js" minified "bootstrap.min.js" dependsOn "jquery.js",
     "org.webjars" % "chartjs" % versions.chartjs / "Chart.js" minified "Chart.min.js",
-    "org.webjars" % "log4javascript" % versions.log4js / "js/log4javascript_uncompressed.js" minified "js/log4javascript.js"
+    "org.webjars" % "log4javascript" % versions.log4js / "js/log4javascript_uncompressed.js" minified "js/log4javascript.js",
+    "org.webjars.npm" % "js-joda" % "1.1.8" / "dist/js-joda.js" minified "dist/js-joda.min.js"
+    //"org.webjars" % "momentjs" % "2.19.1" / "moment.js"
   ))
 }

@@ -1,5 +1,6 @@
 package components
 
+import diode.react.ModelProxy
 import org.scalajs.dom.Event
 
 import scala.util.{Failure, Random, Success}
@@ -16,12 +17,12 @@ import dom.ext.Ajax
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.extra.router.RouterCtl
 import japgolly.scalajs.react.vdom.html_<^._
-import services.UserUtils
+import services.{RootModel, UserUtils}
 import shared.Keys
 
 object LoginForm {
 
-  case class Props(onLogin: User => Callback)
+  case class Props(proxy: ModelProxy[RootModel])
   case class State(userId: Option[String], error: Option[String])
 
 
@@ -83,5 +84,5 @@ object LoginForm {
     .renderBackend[Backend]
     .build
 
-  def apply(onLogin: User => Callback) = component(Props(onLogin))
+  def apply(proxy: ModelProxy[RootModel]) = component(Props(proxy))
 }

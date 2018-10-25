@@ -3,7 +3,7 @@ import sbt.Project.projectToRef
 
 organization in ThisBuild := "sample.chirper"
 
-scalaVersion in ThisBuild := "2.11.8"
+scalaVersion in ThisBuild := "2.11.11"
 
 lazy val friendApi = project("friend-api")
   .settings(
@@ -91,7 +91,7 @@ lazy val client: Project = project("scalajs")
     scalacOptions ++= elideOptions.value,
     jsDependencies ++= Settings.jsDependencies.value,
     // RuntimeDOM is needed for tests
-    jsDependencies += RuntimeDOM % "test",
+    //jsDependencies += RuntimeDOM % "test",
     // yes, we want to package JS dependencies
     skip in packageJSDependencies := false,
     // use Scala.js provided launcher code to start the client app

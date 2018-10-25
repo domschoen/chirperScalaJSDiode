@@ -8,15 +8,11 @@ import japgolly.scalajs.react.vdom.html_<^._
 import scala.util.Random
 import scala.language.existentials
 import org.scalajs.dom
-import services.AjaxClient
-
-import scala.concurrent.ExecutionContext.Implicits.global
-import shared.Keys
-import shared.User
+import services.{AjaxClient, CheckUser, RootModel}
 import dom.ext._
 import org.scalajs.dom.Event
 
-import scala.util.{Random, Success, Failure}
+import scala.util.{Failure, Random, Success}
 import scala.language.existentials
 import org.scalajs.dom
 
@@ -24,7 +20,6 @@ import scala.concurrent.Future
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.scalajs.js.typedarray._
 import upickle.default._
-import shared.User
 import upickle.default.{macroRW, ReadWriter => RW}
 import org.scalajs.dom.ext.AjaxException
 import dom.ext.Ajax
@@ -32,45 +27,25 @@ import japgolly.scalajs.react._
 import japgolly.scalajs.react.extra.router.RouterCtl
 import japgolly.scalajs.react.vdom.html_<^._
 import shared.Keys
-
-import util._
-
+import client.User
+import diode.Action
+import diode.react.ModelProxy
 
 // Translation of App
 object AppPage {
 
-  case class Props(ctl: RouterCtl[Loc], userId: Option[String], showAddFriends: Boolean)
-  case class State(loginChecked: Boolean, user: Option[User])
+  case class Props(ctl: RouterCtl[Loc], proxy: ModelProxy[RootModel], userId: Option[String], showAddFriends: Boolean)
 
 
-  protected class Backend($: BackendScope[Props, State]) {
+  protected class Backend($: BackendScope[Props, Unit]) {
 
 
     def mounted(p: Props): japgolly.scalajs.react.Callback = {
       println("LoginPage mounted")
       val userId = dom.window.localStorage.getItem(Keys.userIdKey)
-      println("LoginPage mounted | user ID:" + userId)
-
-      if (userId != null) {
-        val request = Ajax.get("/api/users/" + userId).recover {
-          // Recover from a failed error code into a successful future
-          case dom.ext.AjaxException(req) => req
-        }.map( r =>
-          r.status match {
-            case 200 =>
-              val user = read[User](r.responseText)
-              $.modState({sta:State => sta.copy(loginChecked = true, user = Some(user))})
-            case _ =>
-              println("Failure processing")
-
-              dom.window.localStorage.removeItem(Keys.userIdKey)
-              $.modState({sta:State => sta.copy(loginChecked = true)})
-          }
-        )
-        Callback.future(request)
-      } else {
-        $.modState({sta:State => sta.copy(loginChecked = true)})
-      }
+      val userIdOpt = if (userId == null) None else Some(userId)
+        println("LoginPage mounted | user ID:" + userIdOpt)
+      p.proxy.dispatchCB(CheckUser(userIdOpt))
     }
 
     def handleLogin(user: User): Callback = {
@@ -85,10 +60,11 @@ object AppPage {
     }
 
 
-    def render(props: Props, s: State): VdomElement = {
-      println("render " + s)
-      if (s.loginChecked) {
-        s.user match {
+    def render(props: Props): VdomElement = {
+      println("render | AppPage")
+      if (props.proxy.value.userLogin.loginChecked) {
+        val userOpt = props.proxy.value.userLogin.loggedUser
+        userOpt match {
           case Some(user) => {
             // set UserChirps if userID
             // set AddFriendPage if showAddFriends
@@ -126,7 +102,7 @@ object AppPage {
     .componentDidMount(scope => scope.backend.mounted(scope.props))
     .build
 
-  def apply(ctl: RouterCtl[Loc], userId: Option[String], showAddFriends: Boolean) = {
+  def apply(ctl: RouterCtl[Loc], proxy: ModelProxy[RootModel], userId: Option[String], showAddFriends: Boolean) = {
     println("create Login Page")
     component(Props(ctl, userId, showAddFriends))
   }
