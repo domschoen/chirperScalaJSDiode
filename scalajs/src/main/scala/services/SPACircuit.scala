@@ -11,7 +11,7 @@ import org.scalajs.dom
 import shared.Keys
 
 // Actions
-case class CheckUser(userIDFromStorage: Option[String]) extends Action
+case object UseLocalStorageUser extends Action
 case class RegisterUser(user: UserFromServer) extends Action
 case class LoginWithID(userId: String) extends Action
 case class LoggedUserAgainstDB(userId: String, user: Option[UserFromServer]) extends Action
@@ -35,8 +35,11 @@ case class RootModel(content: MegaContent)
   */
 class UserLoginHandler[M](modelRW: ModelRW[M, UserLogin]) extends ActionHandler(modelRW) {
   override def handle = {
-    case CheckUser(userIDFromStorage) =>
-      userIDFromStorage match {
+    case UseLocalStorageUser =>
+      val uid = dom.window.localStorage.getItem(Keys.userIdKey)
+      val userIdOpt = if (uid == null) None else Some(uid)
+
+      userIdOpt match {
         case Some(userId) =>
           effectOnly(Effect(UserUtils.getUser(userId).map(LocalStorageUserAgainstDB(_))))
         case None =>

@@ -42,10 +42,7 @@ object AppPage {
 
     def mounted(p: Props): japgolly.scalajs.react.Callback = {
       println("LoginPage mounted")
-      val userId = dom.window.localStorage.getItem(Keys.userIdKey)
-      val userIdOpt = if (userId == null) None else Some(userId)
-        println("LoginPage mounted | user ID:" + userIdOpt)
-      p.proxy.dispatchCB(CheckUser(userIdOpt))
+      p.proxy.dispatchCB(UseLocalStorageUser)
     }
 
 

@@ -69,6 +69,9 @@ object Main extends js.JSApp {
     val someDate = LocalDateTime.ofInstant(someInstant, ZoneId.of("GMT+2"));
     println("someInstant" + someDate.toString)
 
+    //SPACircuit.dispatch(InitClient)
+
+
     val router = Router(BaseUrl.until_#, routerConfig)
 
     router().renderIntoDOM(dom.document.getElementById("root"))
