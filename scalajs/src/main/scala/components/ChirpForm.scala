@@ -4,7 +4,8 @@ import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
 import org.scalajs.dom
 import org.scalajs.dom.ext.Ajax
-import shared.{Keys, PostedMessage, User}
+import shared.{Keys, PostedMessage}
+import client.User
 import upickle.default._
 
 import scala.concurrent.ExecutionContext.Implicits.global

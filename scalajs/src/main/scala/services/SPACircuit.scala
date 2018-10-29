@@ -15,7 +15,7 @@ case object UseLocalStorageUser extends Action
 case class RegisterUser(user: UserFromServer) extends Action
 case class LoginWithID(userId: String) extends Action
 case class LoggedUserAgainstDB(userId: String, user: Option[UserFromServer]) extends Action
-case class LocalStorageUserAgainstDB(user: Option[UserFromServer]) extends Action
+case class ProcessLocalStorageUserDBResult(user: Option[UserFromServer]) extends Action
 case class RegisterFriends(friendIDs: List[String]) extends Action
 case class ChirpReceived(chirp: ChirpFromServer) extends Action
 
@@ -36,25 +36,29 @@ case class RootModel(content: MegaContent)
 class UserLoginHandler[M](modelRW: ModelRW[M, UserLogin]) extends ActionHandler(modelRW) {
   override def handle = {
     case UseLocalStorageUser =>
-      val uid = dom.window.localStorage.getItem(Keys.userIdKey)
+      println("UserLoginHandler | UseLocalStorageUser")
+      //val uid = dom.window.localStorage.getItem(Keys.userIdKey)
+      val uid = null
       val userIdOpt = if (uid == null) None else Some(uid)
+      println("UserLoginHandler | UseLocalStorageUser | userIdOpt " + userIdOpt)
 
       userIdOpt match {
         case Some(userId) =>
-          effectOnly(Effect(UserUtils.getUser(userId).map(LocalStorageUserAgainstDB(_))))
+          effectOnly(Effect(UserUtils.getUser(userId).map(ProcessLocalStorageUserDBResult(_))))
         case None =>
-          effectOnly(Effect.action(LocalStorageUserAgainstDB(None)))
+          effectOnly(Effect.action(ProcessLocalStorageUserDBResult(None)))
       }
 
 
-    case LocalStorageUserAgainstDB(userOpt) =>
+    case ProcessLocalStorageUserDBResult(userOpt) =>
       userOpt match {
         case Some(user) =>
           effectOnly(Effect.action(RegisterUser(user)))
 
         case None =>
-          dom.window.localStorage.removeItem(Keys.userIdKey)
-          updated(UserLogin(loginChecked = true, loggedUser = None))
+          //dom.window.localStorage.removeItem(Keys.userIdKey)
+          val newValue = value.copy(loginChecked = true, loggedUser = Some(User("dom","dom",List())))
+          updated(newValue)
       }
 
 
@@ -71,7 +75,7 @@ class UserLoginHandler[M](modelRW: ModelRW[M, UserLogin]) extends ActionHandler(
     case LoggedUserAgainstDB(userId, userOpt) =>
       userOpt match {
         case Some(user) =>
-          dom.window.localStorage.setItem(Keys.userIdKey, user.userId)
+          //dom.window.localStorage.setItem(Keys.userIdKey, user.userId)
           effectOnly(Effect.action(RegisterUser(user)))
 
         case None =>

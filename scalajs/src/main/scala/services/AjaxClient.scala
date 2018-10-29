@@ -7,7 +7,7 @@ import scala.concurrent.Future
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.scalajs.js.typedarray._
 import upickle.default._
-import shared.User
+import client.User
 import upickle.default.{macroRW, ReadWriter => RW}
 import org.scalajs.dom.ext.AjaxException
 import dom.ext.Ajax

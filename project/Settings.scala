@@ -31,7 +31,7 @@ object Settings {
     val log4js = "1.4.10"
     val autowire = "0.2.6"
     val booPickle = "1.3.0"
-    val diode = "1.1.2"
+    val diode = "1.1.3"
     val uTest = "0.4.7"
 
     val react = "15.6.1"

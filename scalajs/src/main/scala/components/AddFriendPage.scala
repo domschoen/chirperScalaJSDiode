@@ -8,11 +8,11 @@ import japgolly.scalajs.react.vdom.html_<^.{<, _}
 import org.scalajs.dom
 import org.scalajs.dom.ext.Ajax
 import services.{StreamUtils, UserUtils}
-import shared.{Keys, User}
+import shared.Keys
+import client.User
 import upickle.default.write
 
 import scala.language.existentials
-import shared.User
 import upickle.default.{macroRW, ReadWriter => RW}
 
 import scala.concurrent.ExecutionContext.Implicits.global
