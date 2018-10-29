@@ -9,7 +9,8 @@ import scala.scalajs.js
 import scala.scalajs.js.annotation.{JSExport, JSExportTopLevel}
 import components.{AddFriendPage, AppPage, SignUpPage}
 import com.zoepepper.facades.jsjoda._
-import services.SPACircuit
+import services.{MegaContent, SPACircuit, UseLocalStorageUser}
+import diode.Action
 import diode.react.ModelProxy
 
 @JSExportTopLevel("Main")
@@ -27,8 +28,11 @@ object Main extends js.JSApp {
     import dsl._
     val wrapper = SPACircuit.connect(_.content)
 
+    val contentWrapper = SPACircuit.connect(_.content)
+
+
     (emptyRule
-      | staticRoute(root, LoginLoc) ~> renderR(ctl => SPACircuit.wrap(_.content)(proxy => AppPage(ctl, proxy, None, false)))
+      | staticRoute(root, LoginLoc) ~> renderR(ctl => contentWrapper(AppPage(ctl, _, None, false)))
       | staticRoute("#signup", SignupLoc) ~> renderR(ctl => SPACircuit.wrap(_.content)(proxy => SignUpPage(ctl,proxy)))
       | staticRoute("#addFriend", AddFriendLoc) ~> renderR(ctl => SPACircuit.wrap(_.content)(proxy => AppPage(ctl, proxy, None, true)))
       | dynamicRouteCT("#users" / string(".*").caseClass[UserChirpLoc]) ~> dynRenderR(
@@ -69,7 +73,7 @@ object Main extends js.JSApp {
     val someDate = LocalDateTime.ofInstant(someInstant, ZoneId.of("GMT+2"));
     println("someInstant" + someDate.toString)
 
-    //SPACircuit.dispatch(InitClient)
+    //SPACircuit.dispatch(UseLocalStorageUser)
 
 
     val router = Router(BaseUrl.until_#, routerConfig)

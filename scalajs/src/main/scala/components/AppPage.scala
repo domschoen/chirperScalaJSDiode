@@ -49,6 +49,7 @@ object AppPage {
     def render(props: Props): VdomElement = {
       println("render | AppPage")
       if (props.proxy.value.userLogin.loginChecked) {
+        println("render | AppPage | login checked")
         val userOpt = props.proxy.value.userLogin.loggedUser
         userOpt match {
           case Some(user) => {
@@ -78,6 +79,7 @@ object AppPage {
           }
         }
       } else {
+        println("render | AppPage | loading")
         <.div(^.className :="loading")
       }
     }

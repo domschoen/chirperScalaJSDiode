@@ -37,8 +37,7 @@ class UserLoginHandler[M](modelRW: ModelRW[M, UserLogin]) extends ActionHandler(
   override def handle = {
     case UseLocalStorageUser =>
       println("UserLoginHandler | UseLocalStorageUser")
-      //val uid = dom.window.localStorage.getItem(Keys.userIdKey)
-      val uid = null
+      val uid = dom.window.localStorage.getItem(Keys.userIdKey)
       val userIdOpt = if (uid == null) None else Some(uid)
       println("UserLoginHandler | UseLocalStorageUser | userIdOpt " + userIdOpt)
 
@@ -56,8 +55,9 @@ class UserLoginHandler[M](modelRW: ModelRW[M, UserLogin]) extends ActionHandler(
           effectOnly(Effect.action(RegisterUser(user)))
 
         case None =>
-          //dom.window.localStorage.removeItem(Keys.userIdKey)
-          val newValue = value.copy(loginChecked = true, loggedUser = Some(User("dom","dom",List())))
+          dom.window.localStorage.removeItem(Keys.userIdKey)
+          println("UserLoginHandler | ProcessLocalStorageUserDBResult | None ")
+          val newValue = value.copy(loginChecked = true, loggedUser = None)
           updated(newValue)
       }
 
@@ -75,7 +75,7 @@ class UserLoginHandler[M](modelRW: ModelRW[M, UserLogin]) extends ActionHandler(
     case LoggedUserAgainstDB(userId, userOpt) =>
       userOpt match {
         case Some(user) =>
-          //dom.window.localStorage.setItem(Keys.userIdKey, user.userId)
+          dom.window.localStorage.setItem(Keys.userIdKey, user.userId)
           effectOnly(Effect.action(RegisterUser(user)))
 
         case None =>
