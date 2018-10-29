@@ -7,20 +7,22 @@ import japgolly.scalajs.react.extra.router.RouterCtl
 import japgolly.scalajs.react.vdom.html_<^.{<, _}
 import org.scalajs.dom
 import org.scalajs.dom.ext.Ajax
-import services.{StreamUtils, UserUtils}
+import services.{MegaContent, StreamUtils, UserUtils, AddFriend}
 import shared.Keys
 import client.User
+import diode.react.ModelProxy
 import upickle.default.write
 
 import scala.language.existentials
 import upickle.default.{macroRW, ReadWriter => RW}
 
 import scala.concurrent.ExecutionContext.Implicits.global
+import diode.Action
 
 object AddFriendPage {
 
+  case class Props(router: RouterCtl[Loc], proxy: ModelProxy[MegaContent])
   case class State(friendId: Option[String], error: Option[String])
-  case class Props(router: RouterCtl[Loc])
 
   case class PostFriendId(friendId: String)
   object PostFriendId{
@@ -35,34 +37,8 @@ object AddFriendPage {
         s.friendId match {
           case Some(id) =>
             val friendId: String =  id.trim()
-            if (friendId.length > 0) {
-              // TODO restore it
-              /*val request = UserUtils.getUser(friendId, { friend => {
-                val userId = dom.window.localStorage.getItem(Keys.userIdKey)
-                val request = Ajax.post(
-                  url = "/api/users/" + userId + "/friends",
-                  data = write(PostFriendId(friendId))
-                ).recover {
-                  // Recover from a failed error code into a successful future
-                  case dom.ext.AjaxException(req) => req
-                }.map( r =>
-                  r.status match {
-                    case 200 =>
-                      // To clear the field so the user can enter someone else
-                      $.modState(_.copy(friendId = None))
-                      p.router.set(LoginLoc)
+            Callback.when(friendId.length > 0)(p.proxy.dispatchCB(AddFriend(friendId))) >>  p.router.set(LoginLoc)
 
-                    case _ =>
-                      val errorMsg = "Error occurred while adding friend: " + r.responseText
-                      println(errorMsg)
-                      $.modState(_.copy(error = Some(errorMsg)))
-                  }
-                )
-                Callback.future(request)
-              }}, Callback.empty)
-              Callback.future(request)*/
-              Callback.empty
-            } else Callback.empty
           case _ =>
             Callback.empty
         }
@@ -101,5 +77,5 @@ object AddFriendPage {
     .renderBackend[Backend]
     .build
 
-  def apply(router: RouterCtl[Loc]) = component(Props(router))
+  def apply(router: RouterCtl[Loc], proxy: ModelProxy[MegaContent]) = component(Props(router, proxy))
 }

@@ -30,23 +30,16 @@ import shared.Keys
 
 import scala.concurrent.ExecutionContext.Implicits.global
 
-object ChirpStream{
+object ChirpStream {
 
-  case class Props(router: RouterCtl[Loc], proxy: ModelProxy[MegaContent], stream: Socket, users: Map[String, User])
-  case class State(message: Option[String], users: Map[String, User], chirps: List[client.Chirp])
+  case class Props(router: RouterCtl[Loc], proxy: ModelProxy[MegaContent], users: List[String])
+  case class State(message: Option[String])
   //val stateReuse: Reusability[State] = Reusability.byRefOr_==
   //val propsReuse: Reusability[Props] = Reusability.byRefOr_==
 
 
   protected class Backend($: BackendScope[Props, State]) {
-    var loadingUsers = Map[String, Boolean]()
-    //var stream: Socket = null
 
-    def addChirp (chirp: client.Chirp) = {
-      println("Add chirp " + chirp)
-      $.modState(s => s.copy(chirps = chirp :: s.chirps)).runNow()
-      Callback.empty
-    }
 
     def willReceiveProps(currentProps: Props, nextProps: Props): Callback = {
       println("ChirpStream | will receive props")
@@ -55,14 +48,11 @@ object ChirpStream{
 
     def mounted(p: Props, s: State): japgolly.scalajs.react.Callback = {
       println("ChirpStream mounted")
-      loadingUsers = Map()
-      p.stream.connect(addChirp)
       Callback.empty
     }
 
     def unmount(p: Props): japgolly.scalajs.react.Callback = {
       println("ChirpStream unmount")
-      p.stream.close()
       Callback.empty
     }
 
@@ -106,15 +96,16 @@ object ChirpStream{
     }
 
 
-    def render(props: Props, s: State): VdomElement = {
-      //props.users
-      println("ChirpStream | render with " + s.chirps)
+    def render(p: Props, s: State): VdomElement = {
+      val users = p.users.map( userId => p.proxy.value.users(userId))
+      val chirps = client.Chirp.orderedChirpsOfUsers(users)
+      println("ChirpStream | render with " + chirps)
       <.div(^.className := "chirpStream",
         <.hr(),
-        s.chirps toTagMod (
+        chirps toTagMod (
           chirp => {
-            val userName = s.users(chirp.userId).name
-            Chirp(props.router, chirp.userId, userName, chirp.uuid, chirp.message)
+            val userName = p.proxy.value.users(chirp.userId).name
+            Chirp(p.router, chirp.userId, userName, chirp.uuid, chirp.message)
           }
         )
       )
@@ -127,7 +118,7 @@ object ChirpStream{
 
   // create the React component for Dashboard
   private val component = ScalaComponent.builder[Props]("ChirpStream")
-    .initialStateFromProps(p => State(None, p.users, List()))
+    .initialStateFromProps(p => State(None))
     .renderBackend[Backend]
     .componentDidMount(scope => scope.backend.mounted(scope.props, scope.state))
     .componentWillUnmount(scope => scope.backend.unmount(scope.props))
@@ -135,5 +126,5 @@ object ChirpStream{
     .componentWillReceiveProps(scope => scope.backend.willReceiveProps(scope.currentProps, scope.nextProps))
     .build
 
-  def apply(router: RouterCtl[Loc], proxy: ModelProxy[MegaContent],stream: Socket, users: Map[String, User]) = component(Props(router, proxy, stream, users))
+  def apply(router: RouterCtl[Loc], proxy: ModelProxy[MegaContent], users: List[String]) = component(Props(router, proxy, users))
 }

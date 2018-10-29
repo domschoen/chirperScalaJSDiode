@@ -52,17 +52,17 @@ object AppPage {
         println("render | AppPage | login checked")
         val userOpt = props.proxy.value.userLogin.loggedUser
         userOpt match {
-          case Some(user) => {
+          case Some(userId) => {
             // set UserChirps if userID
             // set AddFriendPage if showAddFriends
             val subComponent = if (props.showAddFriends) {
-              AddFriendPage(props.ctl)
+              AddFriendPage(props.ctl, props.proxy)
             } else {
               props.userId match {
                 case Some(uid) =>
                   UserChirps(props.ctl,props.proxy, uid)
                 case None =>
-                  ActivityStream(props.ctl, props.proxy, user)
+                  ActivityStream(props.ctl, props.proxy, userId)
               }
             }
             // user is logged

@@ -44,7 +44,13 @@ object PageLayout {
     // create the React component for Dashboard
   private val component = ScalaComponent.builder[Props]("PageLayout")
     .renderPC((_, props, c) => {
-      val loggedUserOpt = props.proxy.value.userLogin.loggedUser
+      val loggedUserIdOpt = props.proxy.value.userLogin.loggedUser
+      val loggedUserOpt = if (loggedUserIdOpt.isEmpty) None else {
+        val userId = loggedUserIdOpt.get
+        val users = props.proxy.value.users
+        if (users.contains(userId)) Some(users(userId)) else None
+      }
+
       val showSignup = loggedUserOpt.isEmpty
 
       def logout(e: ReactEventFromInput): Callback = {

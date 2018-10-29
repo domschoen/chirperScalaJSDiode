@@ -21,7 +21,7 @@ object StreamUtils {
       socket.close()
     }
 
-    def connect(onChirp: Chirp => Callback) {
+    def connect() {
       socket.onopen = (e: Event) => {
         userId match {
           case Some(uid) =>
@@ -38,6 +38,7 @@ object StreamUtils {
         dom.console.log(s"Socket error! ${e}")
       }
       socket.onmessage = (e: MessageEvent) => {
+        println("e.data " + e.data)
         val chirp = read[ChirpFromServer](e.data.toString);
         println("Socket received chirp " + chirp)
         SPACircuit.dispatch(ChirpReceived(chirp))
@@ -48,12 +49,14 @@ object StreamUtils {
 
 
   def createUserStream(userId: String):Socket = {
-    Socket("/api/chirps/live", Some(userId))
+    val s = Socket("/api/chirps/live", Some(userId))
+    s.connect()
+    s
   }
 
-  def createActivityStream(userId: String)= {
-    Socket("/api/activity/" + userId + "/live", None)
-  }
+  //def createActivityStream(userId: String)= {
+  //  Socket("/api/activity/" + userId + "/live", None)
+  // }
 
 
 }

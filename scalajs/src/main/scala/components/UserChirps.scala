@@ -5,10 +5,11 @@ import japgolly.scalajs.react._
 import japgolly.scalajs.react.extra.router.RouterCtl
 import japgolly.scalajs.react.vdom.html_<^._
 import org.scalajs.dom
-import services.{MegaContent, StreamUtils, UserUtils}
+import services.{MegaContent, MonitorUser, StreamUtils, UserUtils}
 import shared.Keys
 import client.User
 import diode.react.ModelProxy
+import diode.Action
 
 import scala.concurrent.ExecutionContext.Implicits.global
 
@@ -24,14 +25,9 @@ object UserChirps {
     def mounted(p: Props): japgolly.scalajs.react.Callback = {
       println("UserChirps mounted")
 
-      // TODO restore it
-      /*val request = UserUtils.getUser(p.userId, { user => {
-        $.modState(_.copy(user = Some(user)))
-      }},
-        $.modState(_.copy(user = None, notFound = true))
-      )
-      Callback.future(request)*/
-      Callback.empty
+      // Create the user and the WS if the user doesn't exists
+      val userExists = p.proxy.value.users.contains(p.userId)
+      Callback.when(!userExists)(p.proxy.dispatchCB(MonitorUser(p.userId)))
     }
 
     def render(props: Props, s: State): VdomElement = {
@@ -41,12 +37,6 @@ object UserChirps {
           <.h1("User " + userId + " not found")
         )
       } else {
-        val users = s.user match {
-          case Some(user) =>
-            Map(user.userId -> user)
-          case None =>
-            Map.empty[String,User]
-        }
         val userName = s.user match {
           case Some(user) =>
             user.name
@@ -60,7 +50,7 @@ object UserChirps {
               Section(
                 <.div(^.className := "small-12 columns",
                   ChirpForm().when(showChirpForm),
-                  ChirpStream(props.router, props.proxy, StreamUtils.createActivityStream(userId), users)
+                  ChirpStream(props.router, props.proxy, List(userId))
                 )
               )
             )
@@ -77,5 +67,5 @@ object UserChirps {
     .componentDidMount(scope => scope.backend.mounted(scope.props))
     .build
 
-  def apply(router: RouterCtl[Loc], proxy: ModelProxy[MegaContent],userId: String) = component(Props(router, proxy, userId))
+  def apply(router: RouterCtl[Loc], proxy: ModelProxy[MegaContent], userId: String) = component(Props(router, proxy, userId))
 }
